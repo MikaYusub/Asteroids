@@ -58,5 +58,7 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-/Assets/Sprites
+/Assets/Sprites/2D Space Kit
 /NuGet/
+.editorconfig
+omnisharp.json
