@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+public class Bullet : MonoBehaviour, ICollidable
 {
     private Rigidbody2D _rigidbody;
 
@@ -25,4 +25,11 @@ public class Bullet : MonoBehaviour
     {
         Destroy(gameObject);
     }
+
+    public CollidableType GetCollidableType()
+    {
+        return CollidableType.Bullet;
+    }
+
+    public void OnCollide() { }
 }
