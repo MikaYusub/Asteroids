@@ -1,6 +1,7 @@
 using UnityEngine;
+using System;
 
-public class Asteroid : MonoBehaviour
+public class Asteroid : MonoBehaviour, ICollidable
 {
     public Sprite[] sprites;
     public float size = 1;
@@ -11,8 +12,10 @@ public class Asteroid : MonoBehaviour
     [SerializeField]
     private float maxLifetime = 30.0f; //seconds
     private SpriteRenderer _spriteRenderer;
+    private readonly GameManager gameManager = GameManager.Instance;
 
     private Rigidbody2D _rigidbody;
+    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -22,9 +25,9 @@ public class Asteroid : MonoBehaviour
 
     private void Start()
     {
-        _spriteRenderer.sprite = sprites[Random.Range(0, sprites.Length)];
+        _spriteRenderer.sprite = sprites[UnityEngine.Random.Range(0, sprites.Length)];
 
-        transform.eulerAngles = new Vector3(0, 0, Random.value * 360);
+        transform.eulerAngles = new Vector3(0, 0, UnityEngine.Random.value * 360);
         transform.localScale = Vector3.one * size;
         _rigidbody.mass = size;
     }
@@ -36,33 +39,38 @@ public class Asteroid : MonoBehaviour
         Destroy(gameObject, maxLifetime);
     }
 
-    public void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.TryGetComponent(out ICollidable collidable))
+        if (collision.gameObject.TryGetComponent(out ICollidable other))
         {
-            if (collidable.GetCollidableType() == CollidableType.Bullet)
-            {
-                if ((size * 0.5) >= minSize)
-                {
-                    // collidable.OnCollide();
-                    CreateSplit();
-                    CreateSplit();
-                }
-                Destroy(gameObject);
-            }
-            else if (collidable.GetCollidableType() == CollidableType.Player)
-            {
-                collidable.OnCollide();
-            }
+            OnCollision(other);
         }
+    }
+
+    public void OnCollision(ICollidable other)
+    {
+        if (other is Bullet)
+        {
+            if ((size * 0.5) >= minSize)
+            {
+                CreateSplit();
+                CreateSplit();
+            }
+            Destroy(gameObject);
+        }
+        else if (other is Player)
+        {
+            gameManager.GameOver();
+        }
+        OnCollisionEvent?.Invoke(other);
     }
 
     private void CreateSplit()
     {
         Vector2 position = transform.position;
-        position += Random.insideUnitCircle * 0.5f;
+        position += UnityEngine.Random.insideUnitCircle * 0.5f;
         Asteroid half = Instantiate(this, position, transform.rotation);
         half.size = size * 0.5f;
-        half.SetTrajectory(Random.insideUnitCircle.normalized * speed);
+        half.SetTrajectory(UnityEngine.Random.insideUnitCircle.normalized * speed);
     }
 }

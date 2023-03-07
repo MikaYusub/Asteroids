@@ -1,6 +1,7 @@
+using System;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ICollidable
 {
     public Bullet bulletPrefab;
     private Rigidbody2D _rigidbody;
@@ -8,10 +9,16 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private float thrustSpeed = 1.0f;
+
+    [SerializeField]
+    private GameManager gameManager = GameManager.Instance;
+
     private float _turndirection;
 
     [SerializeField]
     private float turnSpeed = 1.0f;
+
+    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -55,5 +62,28 @@ public class Player : MonoBehaviour
     {
         Bullet bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
         bullet.Project(transform.up);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        ICollidable other = collision.gameObject.GetComponent<ICollidable>();
+        if (other != null)
+        {
+            OnCollision(other);
+        }
+    }
+
+    public void OnCollision(ICollidable other)
+    {
+        if (other is Asteroid)
+        {
+            gameManager.GameOver();
+        }
+        OnCollisionEvent?.Invoke(other);
+    }
+
+    private void OnDestroy()
+    {
+        OnCollisionEvent = null;
     }
 }

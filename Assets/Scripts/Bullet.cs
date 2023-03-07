@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour, ICollidable
@@ -9,6 +10,8 @@ public class Bullet : MonoBehaviour, ICollidable
 
     [SerializeField]
     private float maxLifetime = 10.0f; //seconds
+
+    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -26,10 +29,8 @@ public class Bullet : MonoBehaviour, ICollidable
         Destroy(gameObject);
     }
 
-    public CollidableType GetCollidableType()
+    public void OnCollision(ICollidable other)
     {
-        return CollidableType.Bullet;
+        throw new NotImplementedException();
     }
-
-    public void OnCollide() { }
 }

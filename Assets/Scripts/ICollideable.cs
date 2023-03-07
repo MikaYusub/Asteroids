@@ -1,12 +1,8 @@
-public enum CollidableType
-{
-    Player,
-    Bullet,
-    Asteroid,
-}
+using System;
 
 public interface ICollidable
 {
-    CollidableType GetCollidableType();
-    void OnCollide();
+    event Action<ICollidable> OnCollisionEvent;
+
+    void OnCollision(ICollidable other);
 }
