@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour, ICollidable
@@ -10,8 +9,6 @@ public class Bullet : MonoBehaviour, ICollidable
 
     [SerializeField]
     private float maxLifetime = 10.0f; //seconds
-
-    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -29,8 +26,12 @@ public class Bullet : MonoBehaviour, ICollidable
         Destroy(gameObject);
     }
 
-    public void OnCollision(ICollidable other)
+    public void HandleCollision(ICollidable other)
     {
-        throw new NotImplementedException();
+        Asteroid asteroid = other as Asteroid;
+        if (asteroid != null)
+        {
+            asteroid.HandleCollision(this);
+        }
     }
 }

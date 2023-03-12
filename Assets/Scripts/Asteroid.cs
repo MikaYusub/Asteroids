@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 
 public class Asteroid : MonoBehaviour, ICollidable
 {
@@ -12,10 +11,7 @@ public class Asteroid : MonoBehaviour, ICollidable
     [SerializeField]
     private float maxLifetime = 30.0f; //seconds
     private SpriteRenderer _spriteRenderer;
-    private readonly GameManager gameManager = GameManager.Instance;
-
     private Rigidbody2D _rigidbody;
-    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -43,12 +39,13 @@ public class Asteroid : MonoBehaviour, ICollidable
     {
         if (collision.gameObject.TryGetComponent(out ICollidable other))
         {
-            OnCollision(other);
+            HandleCollision(other);
         }
     }
 
-    public void OnCollision(ICollidable other)
+    public void HandleCollision(ICollidable other)
     {
+        Debug.Log("Handled");
         if (other is Bullet)
         {
             if ((size * 0.5) >= minSize)
@@ -60,17 +57,16 @@ public class Asteroid : MonoBehaviour, ICollidable
         }
         else if (other is Player)
         {
-            gameManager.GameOver();
+            GameManager.GetInstance().GameOver();
         }
-        OnCollisionEvent?.Invoke(other);
     }
 
     private void CreateSplit()
     {
         Vector2 position = transform.position;
-        position += UnityEngine.Random.insideUnitCircle * 0.5f;
+        position += Random.insideUnitCircle * 0.5f;
         Asteroid half = Instantiate(this, position, transform.rotation);
         half.size = size * 0.5f;
-        half.SetTrajectory(UnityEngine.Random.insideUnitCircle.normalized * speed);
+        half.SetTrajectory(Random.insideUnitCircle.normalized * speed);
     }
 }

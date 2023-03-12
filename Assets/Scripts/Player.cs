@@ -1,24 +1,33 @@
-using System;
+using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour, ICollidable
 {
-    public Bullet bulletPrefab;
+    [SerializeField]
+    private Bullet bulletPrefab;
     private Rigidbody2D _rigidbody;
     private bool _thrusting;
 
     [SerializeField]
     private float thrustSpeed = 1.0f;
+    private GameManager gameManager;
 
     [SerializeField]
-    private GameManager gameManager = GameManager.Instance;
+    private float shootingDelay = 0.2f;
+    private bool shootingDelayed;
+
+    [SerializeField]
+    private ScreenBoundaries screenBoundaries;
+
+    private void Start()
+    {
+        gameManager = GameManager.GetInstance();
+    }
 
     private float _turndirection;
 
     [SerializeField]
     private float turnSpeed = 1.0f;
-
-    public event Action<ICollidable> OnCollisionEvent;
 
     private void Awake()
     {
@@ -26,6 +35,25 @@ public class Player : MonoBehaviour, ICollidable
     }
 
     private void Update()
+    {
+        Move();
+        Vector3 tempPosition = transform.localPosition;
+        if (screenBoundaries.AmIOutOfBounds(tempPosition))
+        {
+            Vector2 newPosition = screenBoundaries.CalculateWrappedPosition(tempPosition);
+            transform.position = newPosition;
+        }
+        else
+        {
+            transform.position = tempPosition;
+        }
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+        {
+            Shoot();
+        }
+    }
+
+    private void Move()
     {
         _thrusting = Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow);
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
@@ -39,10 +67,6 @@ public class Player : MonoBehaviour, ICollidable
         else
         {
             _turndirection = 0.0f;
-        }
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-        {
-            Shoot();
         }
     }
 
@@ -60,30 +84,34 @@ public class Player : MonoBehaviour, ICollidable
 
     public void Shoot()
     {
-        Bullet bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
-        bullet.Project(transform.up);
+        if (shootingDelayed == false)
+        {
+            shootingDelayed = true;
+            Bullet bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
+            bullet.Project(transform.up);
+            _ = StartCoroutine(DelayShooting());
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        ICollidable other = collision.gameObject.GetComponent<ICollidable>();
-        if (other != null)
+        if (collision.collider.TryGetComponent(out ICollidable other))
         {
-            OnCollision(other);
+            other.HandleCollision(this);
         }
     }
 
-    public void OnCollision(ICollidable other)
+    public void HandleCollision(ICollidable other)
     {
         if (other is Asteroid)
         {
             gameManager.GameOver();
         }
-        OnCollisionEvent?.Invoke(other);
     }
 
-    private void OnDestroy()
+    private IEnumerator DelayShooting()
     {
-        OnCollisionEvent = null;
+        yield return new WaitForSeconds(shootingDelay);
+        shootingDelayed = false;
     }
 }

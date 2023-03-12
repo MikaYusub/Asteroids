@@ -1,8 +1,4 @@
-using System;
-
 public interface ICollidable
 {
-    event Action<ICollidable> OnCollisionEvent;
-
-    void OnCollision(ICollidable other);
+    void HandleCollision(ICollidable other);
 }
